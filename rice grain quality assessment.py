@@ -87,11 +87,11 @@ def Ruler_process():
     average_area=0
     center_number=[]
     number=[]
-    for i in range(2, numLabels):
+    for i in range(4, numLabels):
         area = stats[i, cv2.CC_STAT_AREA]
         average_area=(average_area*(i-2)+area)/(i-1)
         
-    for i in range(1, numLabels):
+    for i in range(4, numLabels):
         x = stats[i, cv2.CC_STAT_LEFT]
         y = stats[i, cv2.CC_STAT_TOP]
         w = stats[i, cv2.CC_STAT_WIDTH]
@@ -104,13 +104,13 @@ def Ruler_process():
             cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
             cv2.circle(output, (int(cX), int(cY)), 4, (0, 0, 255), -1)
             componentMask = (labels == i).astype("uint8") * 255
-            
+            '''
             output=cv2.resize(output,(600,800))
             componentMask=cv2.resize(componentMask,(600,800))
             cv2.imshow("Output", output)
             cv2.imshow("Connected Component", componentMask)
             cv2.waitKey(0)
-            
+            '''
     distance_min=1000000
     average_distance_number=0
     for i in range(len(center_number)):
@@ -152,7 +152,7 @@ def Ruler_process():
     Invalid_number=0.05
     average_distance_number=average_distance_number*(1+Invalid_number)
     print("one cm =",average_distance_number,"pixel")
-    print(len(number))
+
 def Kernel_to_find_endpoint():
         global kernel0,kernel1,kernel2,kernel3,kernel4,kernel5,kernel6,kernel7
         kernel0 = np.array((
@@ -1201,13 +1201,13 @@ def Connected_component_labeling_and_analysis(image,min_remove_pixel,max_remove_
             cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
             cv2.circle(output, (int(cX), int(cY)), 4, (0, 0, 255), -1)
             componentMask = (labels == i).astype("uint8") * 255
-            '''
+            
             output=cv2.resize(output,resize)
             componentMask=cv2.resize(componentMask,resize)
             cv2.imshow("Output", output)
             cv2.imshow("Connected Component", componentMask)
             cv2.waitKey(0)
-            '''
+            
             if((area>=1.35*pre_average_area_rice)and((area<2.35*pre_average_area_rice))):
                 number_grain=number_grain+2
                 '''
@@ -1395,19 +1395,19 @@ def Show_image(I_binary,skel_gray,skel_gray_copy_show,skel_gray_copy,I_binary_co
         
         plt.show()
 
-Get_skeleton_image_and_remove_ruler("img/sample6 - Copy.jpg")
+Get_skeleton_image_and_remove_ruler("img/sample1.jpg")
 Ruler_process()
 
 Kernel_to_find_endpoint()
 Kernel_to_find_branch_point()
 Find_branch_point(skel_gray)
 Find_end_point_and_connect_to_branch_point(skel_gray,2)
-Pre_connected_component_labeling_and_analysis(I_draw,0.002*length*height*0.002,length*height)#0.02;0.01
-Draw_line_through_end_point_and_branch_point(skel_gray_copy_show,(255,255,255),(255, 160, 0),int(pre_average_length_rice*0.5))
-Draw_line_between_end_point_and_connect_point(skel_gray_copy_show,(255, 0, 0),(255, 160, 0),int(pre_average_length_rice*0.5))
-Connect_error_point_to_nearest_point(skel_gray_copy_show,int(pre_average_length_rice*0.25))
+Pre_connected_component_labeling_and_analysis(I_draw,0.02*length*height*0.02,0.1*0.1*length*height)#0.02;0.01
+Draw_line_through_end_point_and_branch_point(skel_gray_copy_show,(255,255,255),(255, 160, 0),int(pre_average_length_rice*0.4))
+Draw_line_between_end_point_and_connect_point(skel_gray_copy_show,(255, 0, 0),(255, 160, 0),int(pre_average_length_rice*0.4))
+Connect_error_point_to_nearest_point(skel_gray_copy_show,int(pre_average_length_rice*0.2))
 Draw_line_in_binary_image(I_draw,3)
-Connected_component_labeling_and_analysis(I_draw,0.002*length*height*0.002,length*height,(500,800),average_distance_number/10)
+Connected_component_labeling_and_analysis(I_draw,0.02*length*height*0.02,0.1*0.1*length*height,(500,800),average_distance_number/10)
 Show_image(I_binary,skel_gray,skel_gray_copy_show,skel_gray_copy,I_binary_copy,I_draw)
 
 #color_line_([150 150 150])
