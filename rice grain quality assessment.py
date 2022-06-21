@@ -39,7 +39,6 @@ def Get_skeleton_image_and_remove_ruler(img_file):
                 h_max_area=h
         componentMask = (labels == j).astype("uint8") * 255
         ruler_image=componentMask.copy()
-        
         #Dòng 43-53: Lấp đầy các vùng tối trong phần diện tích thước.
         sure_bg = cv2.dilate(componentMask,kernel,iterations=2)
         contours,hierarchy=cv2.findContours(sure_bg, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -55,7 +54,6 @@ def Get_skeleton_image_and_remove_ruler(img_file):
         
         #Dòng 56: Loại bỏ toàn bộ phần diên tích thước ra khỏi bức ảnh, chỉ giữ lại phần hạt
         I_draw = cv2.subtract(I_gray,sure_bg)
-        
         #Dòng 60-65: Tìm khung xương của bức ảnh
         I_draw=cv2.morphologyEx(I_draw,cv2.MORPH_OPEN,kernel_7,iterations=1) # thay đổi các thông số trên để có thể có được kết quả tốt nhất
         sure_bg = cv2.dilate(I_draw,kernel,iterations=3) # thay đổi các thông số trên để có thể có được kết quả tốt nhất
@@ -84,22 +82,21 @@ def Ruler_process(rate_min_remove,rate_max_remove):
     eroded = cv2.erode(ruler_image_remove_grain_binary, kernel,3)
     sure_bg = cv2.dilate(eroded,kernel,iterations=2)
     (l,h)=np.shape(sure_bg)
-    
     #Tìm diện tích trung bình của 1 chữ số
     output = cv2.connectedComponentsWithStats(sure_bg,4, cv2.CV_32S)
     (numLabels, labels, stats, centroids) = output
     average_area=0
     center_number=[]
     number=[]
-    for i in range(1, numLabels):
+    for i in range(3, numLabels):
         area = stats[i, cv2.CC_STAT_AREA]
         if((area>rate_min_remove*rate_min_remove*l*h)and(area<rate_max_remove*rate_max_remove*l*h)): #Loại bỏ những phần làm nhiễu bức ảnh
-                average_area=(average_area*(i-1)+area)/(i)
+                average_area=(average_area*(i-3)+area)/(i-2)
     count=0
     diagonal_length_of_number_average=0
     
     # Lọc ra các chữ số và tìm đường chéo trung bình của chúng
-    for i in range(1, numLabels):
+    for i in range(3, numLabels):
         x = stats[i, cv2.CC_STAT_LEFT]
         y = stats[i, cv2.CC_STAT_TOP]
         w = stats[i, cv2.CC_STAT_WIDTH]
@@ -1252,7 +1249,7 @@ def Connected_component_labeling_and_analysis(image,rate_min_remove,rate_max_rem
             
             (cX, cY) = centroids[i]
             output = img.copy()
-            cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 1)
+            cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 2)
             cv2.circle(output, (int(cX), int(cY)), 4, (0, 0, 255), -1)
             componentMask = (labels == i).astype("uint8") * 255
             '''
@@ -1431,9 +1428,11 @@ def Show_image(I_binary,skel_gray,skel_gray_copy_show,skel_gray_copy,I_binary_co
         
         fig.add_subplot(rows, columns, 1)
         plt.imshow(I_binary)
+        cv2.imwrite("img/I_binary.jpg",I_binary)
         
         fig.add_subplot(rows, columns, 2)
         plt.imshow(skel_gray)
+        cv2.imwrite("img/skel_gray.jpg",skel_gray)
 
         fig.add_subplot(rows, columns, 3)
         plt.imshow(skel_gray_copy_show)
@@ -1449,18 +1448,19 @@ def Show_image(I_binary,skel_gray,skel_gray_copy_show,skel_gray_copy,I_binary_co
         
         plt.show()
 
-Get_skeleton_image_and_remove_ruler("img/sample1.jpg")
+Get_skeleton_image_and_remove_ruler("img/sample.jpg")
 Kernel_to_find_endpoint()
 Kernel_to_find_branch_point()
 Ruler_process(0.005,0.1)
 Pre_connected_component_labeling_and_analysis(I_draw,0.001,0.1)
 Find_branch_point(skel_gray)
-Find_end_point_and_connect_to_branch_point(skel_gray,50,2)
+Find_end_point_and_connect_to_branch_point(skel_gray,pre_average_length_rice*0.2,2)
 Draw_line_through_end_point_and_branch_point(skel_gray_copy_show,(255,255,255),(255, 160, 0),int(pre_average_length_rice*0.4))
 Draw_line_between_end_point_and_connect_point(skel_gray_copy_show,(255, 0, 0),(255, 160, 0),int(pre_average_length_rice*0.4))
 Connect_error_point_to_nearest_point(skel_gray_copy_show,int(pre_average_length_rice*0.2))
-Draw_line_in_binary_image(I_draw,3)
+Draw_line_in_binary_image(I_draw,2)
 Connected_component_labeling_and_analysis(I_draw,0.001,0.1,(500,800),average_distance_number/10)
-#Show_image(I_binary,skel_gray,skel_gray_copy_show,skel_gray_copy,I_binary_copy,I_draw)
-
+Show_image(I_binary,skel_gray,skel_gray_copy_show,skel_gray_copy,I_binary_copy,I_draw)
+plt.imshow(skel_gray_copy_show)
+plt.show()
 #color_line_([150 150 150])
